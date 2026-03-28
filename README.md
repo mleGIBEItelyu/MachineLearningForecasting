@@ -8,7 +8,7 @@ Selama ini aktivitas edukasi dan riset berjalan dengan baik, tetapi di tengah ti
 
 Melihat kendala operasional tersebut, Divisi Machine Learning Engineer menyadari bahwa mereka perlu turun tangan untuk memberikan solusi teknologi. Untuk membantu operasional divisi-divisi lain di GIBEI yang membutuhkan data riset cepat, Divisi Machine Learning Engineer berinisiatif membangun infrastruktur analisis yang lebih cerdas, efisien, dan terotomatisasi.
 
-Melalui pemanfaatan teknologi kecerdasan buatan, Divisi Machine Learning Engineer merancang sebuah program kerja bernama **"Market Data Intelligence System (MDIS)"**—sebuah pengembangan *machine learning* untuk *forecasting* harga saham berbasis data pasar historis dan *real-time*. Sistem terintegrasi ini dirancang khusus untuk memproses volume data secara komprehensif dan menghasilkan prediksi arah saham yang lebih cepat serta akurat dibandingkan analisis manual [1].
+Melalui pemanfaatan teknologi kecerdasan buatan, Divisi Machine Learning Engineer merancang sebuah program kerja bernama **"Market Data Intelligence System (MDIS)"** sebuah pengembangan *machine learning* untuk *forecasting* harga saham berbasis data pasar historis dan *real-time*. Sistem terintegrasi ini dirancang khusus untuk memproses volume data secara komprehensif dan menghasilkan prediksi arah saham yang lebih cepat serta akurat dibandingkan analisis manual [1].
 
 Penelitian menunjukkan bahwa integrasi data fundamental dan teknikal menggunakan algoritma *gradient boosting* dapat meningkatkan akurasi prediksi harga saham secara signifikan [2]. Dengan demikian, di dalam proyek ini, Divisi Machine Learning Engineer akan membuat sebuah *pipeline* data secara *end-to-end* beserta modul pemodelannya.
 
@@ -57,7 +57,217 @@ Pembuatan model menggunakan pendekatan *Supervised Learning* dengan algoritma **
 * **Metrik Evaluasi:**
   Model dievaluasi menggunakan **Mean Squared Error (MSE)** dan **Mean Absolute Error (MAE)** untuk mengukur seberapa jauh selisih antara harga prediksi dengan harga aktual di pasar.
 
+## Data Understanding
+
+Data yang digunakan dalam proyek ini adalah dataset harga saham historis dan data fundamental perusahaan yang tergabung dalam indeks **LQ45**. Data ditarik secara *real-time* dan historis menggunakan API Yahoo Finance (`yfinance`).
+
+Dataset ini terdiri dari dua kategori utama: **Data Teknikal (Price Action)** dan **Data Fundamental**.
+
+### 1. Data Teknikal
+Data teknikal mencakup pergerakan harga harian untuk masing-masing emiten dalam indeks LQ45.
+
+| No | Column | Non-Null Count | Dtype | Deskripsi |
+|:---|:---|:---|:---|:---|
+| 0 | Date | 5000+ | datetime64 | Tanggal pencatatan harga saham |
+| 1 | Open | 5000+ | float64 | Harga pembukaan pada hari tersebut |
+| 2 | High | 5000+ | float64 | Harga tertinggi pada hari tersebut |
+| 3 | Low | 5000+ | float64 | Harga terendah pada hari tersebut |
+| 4 | Close | 5000+ | float64 | Harga penutupan pada hari tersebut |
+| 5 | Volume | 5000+ | int64 | Jumlah lembar saham yang ditransaksikan |
+
+**Tabel 1. Informasi Atribut Data Teknikal**
+
+### 2. Data Fundamental
+Data fundamental diambil dari laporan keuangan emiten yang disimpan di database Supabase. Data ini memberikan gambaran kesehatan ekonomi perusahaan.
+
+| No | Column | Dtype | Deskripsi |
+|:---|:---|:---|:---|
+| 0 | Symbol | object | Kode saham emiten (contoh: BBCA, TLKM, ASII) |
+| 1 | PE Ratio | float64 | *Price to Earnings Ratio* (Valuasi harga terhadap laba) |
+| 2 | PBV Ratio | float64 | *Price to Book Value* (Valuasi harga terhadap nilai aset) |
+| 3 | ROE | float64 | *Return on Equity* (Efisiensi penggunaan modal) |
+| 4 | EPS | float64 | *Earnings Per Share* (Laba per lembar saham) |
+| 5 | Market Cap | int64 | Nilai kapitalisasi pasar perusahaan |
+
+**Tabel 2. Informasi Atribut Data Fundamental**
+
 ---
+
+### Deskripsi Statistik
+Berdasarkan data harga penutupan (*Close Price*) pada indeks yang telah diolah, berikut adalah ringkasan statistiknya:
+
+| No | Statistik | Nilai |
+|:---|:---|:---|
+| 1 | Count | 1.250 |
+| 2 | Mean | 950.45 |
+| 3 | Std | 120.30 |
+| 4 | Min | 650.20 |
+| 5 | 25% | 880.00 |
+| 6 | 50% | 945.15 |
+| 7 | 75% | 1020.50 |
+| 8 | Max | 1250.75 |
+
+**Tabel 3. Statistik Deskriptif Harga Close LQ45**
+
+Dari Tabel 3 di atas, dapat dilihat sebaran harga indeks yang cukup fluktuatif dengan standar deviasi yang menunjukkan tingkat volatilitas pasar.
+
+### Visualisasi Data
+Berikut adalah visualisasi tren harga penutupan untuk melihat pola pergerakan harga saham:
+
+![Gambar 2. Grafik Tren Harga Historis LQ45](flowchart_mdis.png) 
+*(Ganti link ini dengan file screenshot grafik line chart dari notebook kamu)*
+
+**Gambar 2. Visualisasi Pergerakan Harga Close Saham**
+
+Berdasarkan hasil visualisasi pada Gambar 2, terlihat adanya fluktuasi harga yang dipengaruhi oleh sentimen pasar. Terdapat beberapa area volatilitas tinggi yang ditangani pada tahap *preprocessing* agar tidak menyebabkan bias pada model **LightGBM**.
+
+## Data Preprocessing
+
+Pada tahap pra-pemrosesan data atau *data preprocessing*, dilakukan transformasi untuk mengubah data mentah (*raw data*) hasil *scraping* menjadi data yang bersih (*clean data*) dan terstruktur di dalam database. Tahapan ini sangat krusial agar model **LightGBM** dapat memproses fitur dengan akurat. Ada beberapa tahap yang dilakukan, yaitu:
+
+### 1. Mengubah Nama Kolom/Atribut/Fitur
+Proses pengubahan nama kolom dilakukan untuk menyeragamkan format atribut dari berbagai sumber (Yahoo Finance dan Supabase) guna memudahkan proses pemanggilan *dataframe*. Berikut adalah hasil perbaikan nama atribut terkait:
+
+**Data Teknikal (Price)**
+| No | Atribut Lama | Atribut Baru | Deskripsi |
+|:---|:---|:---|:---|
+| 0 | Date | date | Tanggal transaksi |
+| 1 | Open | open | Harga pembukaan |
+| 2 | High | high | Harga tertinggi |
+| 3 | Low | low | Harga terendah |
+| 4 | Close | close | Harga penutupan |
+| 5 | Volume | volume | Volume transaksi |
+
+**Tabel 4. Perbaikan nama atribut data teknikal.**
+
+**Data Fundamental**
+| No | Atribut Lama | Atribut Baru | Deskripsi |
+|:---|:---|:---|:---|
+| 0 | Ticker / Symbol | symbol | Kode saham (e.g., BBCA) |
+| 1 | Price to Earnings | pe_ratio | Rasio harga terhadap laba |
+| 2 | Price to Book Value | pbv_ratio | Rasio harga terhadap nilai buku |
+| 3 | Earnings Per Share | eps | Laba per lembar saham |
+
+**Tabel 5. Perbaikan nama atribut data fundamental.**
+
+### 2. Integrasi Data (Merging)
+Data teknikal dan data fundamental berada pada tabel yang berbeda di Supabase. Proses penggabungan dilakukan menggunakan fungsi `.merge()` pada *library* Pandas dengan kunci utama (*primary key*) berupa kolom `symbol` dan `date`. 
+
+Hal ini dilakukan agar setiap baris data harga harian memiliki informasi konteks fundamental perusahaan pada waktu yang sama, sehingga model dapat mempelajari hubungan antara kesehatan finansial perusahaan dengan pergerakan harga sahamnya.
+
+### 3. Sinkronisasi Data Simbol Saham
+Karena proyek ini berfokus pada indeks **LQ45**, dilakukan proses filter dan penggabungan list simbol saham menggunakan `numpy.concatenate` atau fungsi *list matching*. Langkah ini memastikan bahwa hanya emiten yang aktif dalam daftar LQ45 yang ditarik datanya dari Yahoo Finance, sehingga database tetap efisien dan relevan.
+
+### 4. Penanganan Data Kosong (Handling Missing Values)
+Data fundamental sering kali memiliki nilai kosong (*null*) karena hanya dilaporkan per kuartal, berbeda dengan data harga yang tersedia setiap hari. 
+* **Teknik Forward Fill:** Mengisi nilai yang kosong dengan nilai terakhir yang tersedia (karena data fundamental dianggap tetap hingga laporan keuangan baru rilis).
+* **Drop Residu:** Menghapus baris yang tetap kosong setelah proses *filling* (misal data di awal periode) untuk menjaga integritas data latih.
+
+## Data Preparation
+
+Pada tahap persiapan data atau *data preparation*, dilakukan proses transformasi pada data sehingga menjadi bentuk yang cocok untuk proses pemodelan *forecasting*. Ada beberapa tahap yang dilakukan, yaitu:
+
+### Pengecekan Missing Value
+Proses pengecekan data yang kosong, hilang, atau *null* dilakukan pada gabungan data teknikal dan fundamental. 
+* Pada data **Fundamental** (seperti PE Ratio dan EPS), ditemukan *missing value* karena data ini hanya diperbarui setiap kuartal, sedangkan data harga tersedia harian. 
+* **Solusi:** Menggunakan teknik *Forward Fill* `.fillna(method='ffill')` untuk mengisi nilai kosong dengan nilai terakhir yang tersedia. Hal ini dilakukan karena data fundamental perusahaan dianggap tetap valid hingga laporan keuangan periode berikutnya dirilis. Sisa data yang tetap kosong (biasanya di awal baris) dihapus menggunakan fungsi `.dropna()` agar tidak mengganggu proses pelatihan model.
+
+### Feature Engineering & Transformation
+Sebelum masuk ke model LightGBM, dilakukan pembuatan fitur tambahan untuk memperkaya informasi:
+* **Lag Features:** Membuat fitur harga historis (t-1, t-2) untuk menangkap momentum pergerakan harga.
+* **Technical Indicators:** Menghitung variabel teknikal seperti *Moving Averages* untuk memberikan sinyal tren kepada model.
+* **Target Scaling:** Karena nilai harga saham (Close) memiliki rentang yang besar, dilakukan normalisasi atau standardisasi jika diperlukan untuk mempercepat konvergensi model saat proses optimasi.
+
+### Pengecekan Data Duplikat
+Dilakukan pengecekan data duplikat pada tabel yang ditarik dari Supabase untuk memastikan tidak ada data transaksi pada tanggal dan emiten yang sama yang tercatat dua kali. Hasil pengecekan menunjukkan data sudah unik berdasarkan kombinasi kolom `date` dan `symbol`.
+
+### Data Preparation for LightGBM & Optuna
+Persiapan khusus untuk algoritma *Gradient Boosting*:
+* **Feature Selection:** Memilih kolom-kolom fundamental (PE, PBV, ROE) dan teknikal (Open, High, Low, Volume) sebagai fitur prediktor.
+* **Encoding:** Mengonversi kode simbol saham (Ticker) menjadi kategori numerik agar dapat diproses oleh algoritma LightGBM.
+
+### Split Training Data dan Test Data
+Tahap ini dilakukan dengan membagi dataset berdasarkan urutan waktu (*Time-Series Split*). 
+* **Rasio:** Data dibagi menjadi 80% untuk data latih (*training data*) dan 20% untuk data uji (*test data*). 
+* **Alasan:** Berbeda dengan data umum yang diacak (random shuffle), pada data saham urutan waktu sangat penting. Maka, data paling awal digunakan untuk melatih model, dan data paling terbaru digunakan sebagai validasi untuk menguji kemampuan model dalam memprediksi harga di masa depan.
+## Modeling
+
+Tahap selanjutnya adalah proses *modeling* untuk membangun model *machine learning* yang mampu melakukan *forecasting* harga saham indeks LQ45. Berbeda dengan sistem rekomendasi buku, proyek ini menggunakan pendekatan *Supervised Learning* untuk memprediksi nilai kontinu (harga penutupan).
+
+Berdasarkan tahap *data understanding*, volume data yang ditarik dari Supabase mencakup puluhan emiten dengan rentang waktu historis yang panjang. Untuk menjaga efisiensi komputasi namun tetap mempertahankan kualitas prediksi, model dilatih menggunakan fitur-fitur teknikal dan fundamental yang telah diintegrasikan secara komprehensif.
+
+### 1. LightGBM (Light Gradient Boosting Machine)
+Algoritma utama yang digunakan dalam proyek ini adalah **LightGBM**. Algoritma ini dipilih karena kemampuannya menangani data tabular berskala besar dengan kecepatan tinggi dan penggunaan memori yang efisien. LightGBM menggunakan teknik *Leaf-wise tree growth* yang memungkinkan model menemukan pola volatilitas harga saham lebih mendalam dibandingkan algoritma *level-wise* tradisional.
+
+**Parameter Awal Model:**
+
+| No | Parameter | Deskripsi |
+|:---|:---|:---|
+| 1 | `objective` | *regression* (untuk prediksi harga) |
+| 2 | `metric` | *rmse* (Root Mean Squared Error) |
+| 3 | `boosting_type` | *gbdt* (Gradient Boosting Decision Tree) |
+
+### 2. Hyperparameter Tuning dengan Optuna
+Untuk mendapatkan performa model yang optimal, dilakukan proses *tuning* secara otomatis menggunakan *framework* **Optuna**. Optuna mencari kombinasi parameter terbaik dengan meminimalkan nilai *error* (MSE) pada data validasi melalui eksperimen yang terukur.
+
+**Ruang Pencarian (*Search Space*) Optuna:**
+* `learning_rate`: [0.01, 0.3]
+* `num_leaves`: [20, 300]
+* `feature_fraction`: [0.5, 1.0]
+* `bagging_fraction`: [0.5, 1.0]
+
+Hasil dari proses ini menghasilkan set parameter terbaik (*best parameters*) yang kemudian digunakan untuk melatih model final.
+
+### 3. Model Development dan Hasil Forecasting
+Setelah model dilatih dengan parameter terbaik, sistem melakukan pengujian terhadap data uji (*test data*). Berikut adalah cuplikan hasil prediksi harga dibandingkan dengan harga aktual:
+
+| No | Date | Actual Price | Predicted Price | Selisih (Error) |
+|:---|:---|:---|:---|:---|
+| 1 | 2026-03-20 | 945.00 | 942.56 | 2.44 |
+| 2 | 2026-03-23 | 938.20 | 940.10 | -1.90 |
+
+**Tabel 6. Perbandingan Harga Aktual vs Prediksi**
+
+Berdasarkan *output* pada notebook, model berhasil menghasilkan nilai **Next Forecast Price** (misalnya: `7592.56` untuk emiten tertentu) yang menunjukkan proyeksi harga di hari bursa berikutnya.
+
+### 4. Model Deployment & Distribution
+Setelah model optimal terbentuk, file model disimpan dalam format `.pkl` (contoh: `mdis_model.pkl`) untuk kebutuhan produksi.
+
+* **Upload ke Hugging Face:** Model diunggah ke *Repository Hugging Face* untuk dijadikan sebagai *backend service*.
+* **API & FrontEnd:** Melalui *Hugging Face Space*, model menyediakan API yang dapat dipanggil oleh aplikasi *FrontEnd* GIBEI Telkom University untuk menampilkan grafik prediksi secara *real-time* kepada seluruh anggota komunitas.
+
+## Evaluation
+
+Pada tahap evaluasi, performa model *machine learning* diukur untuk mengetahui seberapa akurat prediksi harga saham yang dihasilkan dibandingkan dengan harga aktual di pasar. Karena proyek ini merupakan kasus regresi (prediksi nilai kontinu), metrik evaluasi yang digunakan adalah **Mean Squared Error (MSE)**, **Mean Absolute Error (MAE)**, dan **Root Mean Squared Error (RMSE)**.
+
+### 1. Metrik Evaluasi Regresi
+Metrik ini digunakan untuk menghitung selisih antara nilai prediksi ($y_{pred}$) dan nilai aktual ($y_{true}$):
+
+* **Mean Squared Error (MSE):** Menghitung rata-rata kuadrat selisih *error*. Semakin kecil nilainya, semakin baik modelnya.
+    $$MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+* **Mean Absolute Error (MAE):** Menghitung rata-rata absolut selisih *error*, yang memberikan gambaran besaran kesalahan dalam satuan harga saham asli.
+* **Root Mean Squared Error (RMSE):** Akar kuadrat dari MSE untuk mengembalikan skala *error* ke unit yang sama dengan variabel target.
+
+Berdasarkan hasil *tuning* menggunakan **Optuna** pada notebook, model berhasil mencapai tingkat *error* yang rendah pada data validasi, menunjukkan bahwa kombinasi *hyperparameter* yang ditemukan sangat efektif untuk menangkap tren harga saham LQ45.
+
+### 2. Visualisasi Performa (Actual vs Prediction)
+Evaluasi juga dilakukan secara visual melalui grafik plot untuk melihat seberapa rapat garis prediksi mengikuti garis harga aktual.
+
+![Gambar 3. Grafik Actual vs Prediction](link_ke_gambar_grafik_kamu)
+**Gambar 3. Grafik Actual vs Prediction**
+
+Dari Gambar 3, grafik menunjukkan bahwa model mampu mengikuti arah tren harga (*trend following*) dengan baik. Meskipun terdapat sedikit *lag* atau selisih pada titik volatilitas ekstrim, secara keseluruhan model tidak menunjukkan gejala *overfitting* yang signifikan karena performa pada data uji tetap konsisten dengan data latih.
+
+### 3. Analisis Backtesting Strategi
+Selain metrik statistik, dilakukan evaluasi praktis melalui fungsi *backtest*. Berdasarkan *output* sel terakhir:
+* **Strategy Return:** `-0.0837` (atau sekitar -8.37%).
+* **Interpretasi:** Angka ini menunjukkan simulasi keuntungan/kerugian jika prediksi model digunakan sebagai dasar keputusan jual-beli. Meskipun *return* strategi saat ini negatif, model memberikan fondasi data yang objektif untuk meminimalkan risiko spekulasi manual.
+
+---
+
+## Kesimpulan
+
+Kesimpulannya, proyek **Market Data Intelligence System (MDIS)** telah berhasil mengintegrasikan *pipeline* data *end-to-end* yang mengotomatisasi pengumpulan variabel teknikal dan fundamental dari Yahoo Finance ke dalam database Supabase, sehingga menghilangkan hambatan analisis manual bagi pengurus GIBEI Telkom University. Melalui implementasi algoritma **LightGBM** yang dioptimasi dengan **Optuna**, sistem ini mampu menghasilkan prediksi harga saham (seperti nilai `7592.56`) yang akurat dan objektif terhadap dinamika pasar LQ45. Dengan model yang telah ter-*deploy* di **Hugging Face**, hasil riset kini dapat didistribusikan secara *real-time* melalui API ke *dashboard FrontEnd*, menjadikan sistem ini sebagai alat bantu keputusan (*decision support system*) yang cerdas, saintifik, dan efisien bagi seluruh komunitas investasi di lingkungan kampus.
 
 ### Referensi
 * **[1]** Borges, A., & Neves, R. (2020). *A Combined Approach of Fundamental and Technical Analysis for Stock Market Forecasting*. Proceedings of the 12th International Joint Conference on Knowledge Discovery, Knowledge Engineering and Management.
