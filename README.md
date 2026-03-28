@@ -29,6 +29,7 @@ Berdasarkan rumusan masalah tersebut, maka didapatkan tujuan dari proyek ini, ya
 * Membangun model prediksi harga saham menggunakan **LightGBM** dengan optimasi **Optuna** untuk menghasilkan akurasi yang tinggi.
 
 ### Solution Statements
+![Gambar 1. Diagram alir kerja Market Data Intelligence System](flowchart_mdis.png)
 > **Catatan:** Gambar 1 menunjukkan proses *end-to-end* dari *data scraping*, penyimpanan *database*, hingga *deployment* di Hugging Face.
 
 Berikut adalah langkah-langkah solusi untuk mencapai tujuan proyek:
