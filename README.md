@@ -327,19 +327,30 @@ Model yang telah dilatih disimpan dalam format .pkl dan diunggah ke Hugging Face
 Alur integrasi:
 
 **1.Frontend mengirim request data saham**
+
 **2.Backend memproses dan mengirim ke model**
+
 **3.Model menghasilkan prediksi**
+
 **4.Hasil dikembalikan dalam format JSON**
+
 **5.Frontend menampilkan hasil kepada pengguna**
+
 Dengan pendekatan ini, proses prediksi dapat dilakukan secara real-time tanpa perlu retraining model.
 
 ### 5. Alur Kerja Sistem (End-to-End)
 Berikut adalah alur kerja sistem secara keseluruhan:
+
 **1.Data saham diambil dari Yahoo Finance**
+
 **2.Data disimpan ke database (Supabase/Turso)**
+
 **3.Data diproses melalui preprocessing dan feature engineering**
+
 **4.Model melakukan prediksi berdasarkan data terbaru**
+
 **5.Hasil prediksi dikirim melalui API**
+
 **6.Frontend menampilkan data dan insight kepada pengguna**
 
 ### 6. Maintenance dan Monitoring
