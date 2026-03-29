@@ -264,6 +264,86 @@ Selain metrik statistik, dilakukan evaluasi praktis melalui fungsi *backtest*. B
 * **Interpretasi:** Angka ini menunjukkan simulasi keuntungan/kerugian jika prediksi model digunakan sebagai dasar keputusan jual-beli. Meskipun *return* strategi saat ini negatif, model memberikan fondasi data yang objektif untuk meminimalkan risiko spekulasi manual.
 
 ---
+## Deployment 
+Tahap deployment merupakan proses implementasi model machine learning yang telah dikembangkan ke dalam sistem aplikasi yang dapat digunakan secara langsung oleh pengguna. Pada proyek Market Data Intelligence System (MDIS), deployment tidak hanya mencakup penyimpanan model, tetapi juga integrasi menyeluruh antara pipeline data, model prediksi, database, serta antarmuka pengguna (frontend application).
+
+### 1. Arsitektur Sistem Deployment
+Arsitektur deployment pada sistem MDIS terdiri dari beberapa komponen utama yang saling terintegrasi:
+* **Data Source Layer**
+Data diambil dari Yahoo Finance menggunakan library yfinance, yang mencakup data teknikal dan fundamental saham indeks LQ45.
+* **Database Layer (Supabase & Turso/LibSQL)**
+Data yang telah di-scrape disimpan ke dalam database untuk memastikan ketersediaan data historis dan real-time secara terstruktur.
+* **Model Layer (Machine Learning)**
+Model LightGBM yang telah dilatih dan dioptimasi menggunakan Optuna disimpan dalam format .pkl dan digunakan untuk proses inference.
+* **Deployment Layer (Hugging Face)**
+Model diunggah ke platform Hugging Face untuk menyediakan layanan prediksi melalui API.
+* **Application Layer (Frontend & Backend)**
+Aplikasi dibangun menggunakan arsitektur fullstack berbasis Next.js yang menangani interaksi pengguna serta komunikasi dengan model.
+
+### 2. Implementasi Teknologi Sistem
+Sistem MDIS dikembangkan menggunakan teknologi modern untuk memastikan performa dan skalabilitas:
+* **Frontend & Backend Framework:** Next.js (App Router)
+* **UI Library:** React
+* **Frontend & Backend Framework:**
+* **Bahasa Pemrograman:** TyprScript
+* **Database:** Turso dan Supabase
+* **ORM:** Drizzle ORM
+* **Autentikasi:** NextAuth.js
+* **Styling:** Tailwind CSS dan shadcn/ui
+* **Visualisasi Data:** Recharts
+
+### 3. Implementasi Fitur Sistem
+Pada tahap deployment, model machine learning diintegrasikan ke dalam fitur-fitur utama aplikasi sebagai berikut:
+**a. Pencarian Kode Saham**
+Pengguna dapat mencari saham berdasarkan kode emiten (misalnya BBCA, TLKM). Sistem akan mengambil data dari database dan menampilkan informasi terkait saham tersebut.
+
+**b. Menampilkan Harga Saham Terkini**
+Sistem menampilkan data harga terbaru yang mencakup:
+* **Open, High, Low, Close**
+* **Volume transaksi**
+Data ini diperbarui secara berkala melalui pipeline scraping otomatis.
+
+**c. Visualisasi Chart Harga dan Prediksi**
+Aplikasi menyediakan grafik interaktif yang menampilkan:
+* **Harga historis (actual price)**
+* **Hasil prediksi model (predicted price)**
+Visualisasi ini membantu pengguna memahami tren pasar secara lebih intuitif.
+
+**d. Prediksi Arah Market (Forecasting Insight)**
+Model LightGBM menghasilkan prediksi harga saham pada periode berikutnya. Hasil ini kemudian diinterpretasikan menjadi arah pasar:
+* **Bullish (Naik) → Prediksi lebih tinggi dari harga saat ini**
+* **Bearish (Turun) → Prediksi lebih rendah**
+* **Sideways (Stabil) → Perubahan tidak signifikan**
+Output yang ditampilkan:
+* **Predicted price**
+* **Persentase perubahan**
+* **Arah market**
+
+### 4.Integrasi Model dan API
+Model yang telah dilatih disimpan dalam format .pkl dan diunggah ke Hugging Face. Platform ini menyediakan API endpoint yang digunakan oleh aplikasi untuk melakukan inference.
+Alur integrasi:
+**1.Frontend mengirim request data saham**
+**2.Backend memproses dan mengirim ke model**
+**3.Model menghasilkan prediksi**
+**4.Hasil dikembalikan dalam format JSON**
+**5.Frontend menampilkan hasil kepada pengguna**
+Dengan pendekatan ini, proses prediksi dapat dilakukan secara real-time tanpa perlu retraining model.
+
+### 5. Alur Kerja Sistem (End-to-End)
+Berikut adalah alur kerja sistem secara keseluruhan:
+**1.Data saham diambil dari Yahoo Finance**
+**2.Data disimpan ke database (Supabase/Turso)**
+**3.Data diproses melalui preprocessing dan feature engineering**
+**4.Model melakukan prediksi berdasarkan data terbaru**
+**5.Hasil prediksi dikirim melalui API**
+**6.Frontend menampilkan data dan insight kepada pengguna**
+
+### 6. Maintenance dan Monitoring
+Untuk menjaga performa sistem:
+* **Data diperbarui secara berkala (harian)**
+* **Model dapat di-retrain dengan data terbaru**
+* **Monitoring dilakukan terhadap error model dan performa API**
+Langkah ini penting untuk memastikan sistem tetap relevan dengan kondisi pasar yang dinamis.
 
 ## Kesimpulan
 
