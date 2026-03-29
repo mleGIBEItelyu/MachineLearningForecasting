@@ -306,12 +306,14 @@ Data ini diperbarui secara berkala melalui pipeline scraping otomatis.
 
 **c. Visualisasi Chart Harga dan Prediksi**
 Aplikasi menyediakan grafik interaktif yang menampilkan:
+
 * **Harga historis (actual price)**
 * **Hasil prediksi model (predicted price)**
 Visualisasi ini membantu pengguna memahami tren pasar secara lebih intuitif.
 
 **d. Prediksi Arah Market (Forecasting Insight)**
 Model LightGBM menghasilkan prediksi harga saham pada periode berikutnya. Hasil ini kemudian diinterpretasikan menjadi arah pasar:
+
 * **Bullish (Naik) → Prediksi lebih tinggi dari harga saat ini**
 * **Bearish (Turun) → Prediksi lebih rendah**
 * **Sideways (Stabil) → Perubahan tidak signifikan**
@@ -323,6 +325,7 @@ Output yang ditampilkan:
 ### 4.Integrasi Model dan API
 Model yang telah dilatih disimpan dalam format .pkl dan diunggah ke Hugging Face. Platform ini menyediakan API endpoint yang digunakan oleh aplikasi untuk melakukan inference.
 Alur integrasi:
+
 **1.Frontend mengirim request data saham**
 **2.Backend memproses dan mengirim ke model**
 **3.Model menghasilkan prediksi**
@@ -341,6 +344,7 @@ Berikut adalah alur kerja sistem secara keseluruhan:
 
 ### 6. Maintenance dan Monitoring
 Untuk menjaga performa sistem:
+
 * **Data diperbarui secara berkala (harian)**
 * **Model dapat di-retrain dengan data terbaru**
 * **Monitoring dilakukan terhadap error model dan performa API**
