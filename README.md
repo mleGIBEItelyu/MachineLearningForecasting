@@ -294,6 +294,7 @@ Sistem MDIS dikembangkan menggunakan teknologi modern untuk memastikan performa 
 
 ### 3. Implementasi Fitur Sistem
 Pada tahap deployment, model machine learning diintegrasikan ke dalam fitur-fitur utama aplikasi sebagai berikut:
+
 **a. Pencarian Kode Saham**
 Pengguna dapat mencari saham berdasarkan kode emiten (misalnya BBCA, TLKM). Sistem akan mengambil data dari database dan menampilkan informasi terkait saham tersebut.
 
