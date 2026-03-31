@@ -141,24 +141,23 @@ Pada tahap persiapan data atau *data preparation*, dilakukan proses transformasi
 
 ### 1. Penanganan Missing Value & Sinkronisasi
 Proses pengecekan data kosong dilakukan terutama pada integrasi data teknikal harian dan fundamental kuartalan.
-* **Forward Fill (`ffill`):** Mengisi nilai kosong pada data fundamental dengan nilai laporan terakhir yang tersedia, karena data fundamental perusahaan dianggap tetap valid hingga laporan keuangan periode berikutnya dirilis.
-* **Zero Imputation (`fillna(0)`):** Sisa data yang tetap kosong di awal baris (data sebelum laporan pertama tersedia) diisi dengan angka 0. Hal ini dilakukan untuk menjaga integritas baris data tanpa mengurangi jumlah sampel (*keeping time-series continuity*).
+* Forward fill (`ffill`) artinya mengisi nilai kosong pada data fundamental dengan nilai laporan terakhir yang tersedia, karena data fundamental perusahaan dianggap tetap valid hingga laporan keuangan periode berikutnya dirilis.
+* Zero imputation (`fillna(0)`) artinya sisa data yang tetap kosong di awal baris (data sebelum laporan pertama tersedia) diisi dengan angka 0. Hal ini dilakukan untuk menjaga integritas baris data tanpa mengurangi jumlah sampel (*keeping time-series continuity*).
 
 ### 2. Feature Engineering & Transformation
 Untuk memperkaya informasi bagi model LightGBM, dibuat fitur tambahan sebagai prediktor:
-* **Technical Indicators:** Menghitung variabel teknikal kompleks yang mencakup SMA (5, 20), RSI, MACD, Bollinger Bands, ATR, dan OBV.
-* **Momentum Features:** Membuat fitur `return_1d`, `return_3d`, dan `return_5d` untuk menangkap tren perubahan harga dan volatilitas dalam rentang waktu tertentu.
-* **Categorical Encoding:** Mengonversi kolom `ticker` menjadi format yang dapat diproses oleh algoritma LightGBM untuk membedakan karakteristik antar emiten.
+* Technical indicators artinya menghitung variabel teknikal kompleks yang mencakup SMA (5, 20), RSI, MACD, Bollinger Bands, ATR, dan OBV.
+* Momentum features artinya membuat fitur `return_1d`, `return_3d`, dan `return_5d` untuk menangkap tren perubahan harga dan volatilitas dalam rentang waktu tertentu.
+* Categorical encoding artinya mengonversi kolom `ticker` menjadi format yang dapat diproses oleh algoritma LightGBM untuk membedakan karakteristik antar emiten.
 
 ### 3. Pengecekan Integritas Data
 Dilakukan verifikasi data untuk memastikan kualitas sebelum masuk ke tahap pelatihan:
-* **Pengecekan Duplikat:** Memastikan data unik berdasarkan kombinasi kolom `date` dan `ticker`.
-* **Feature Selection:** Memilih fitur teknikal (OHLCV + Indikator) dan fundamental (Assets, Liabilities, Revenue, Net Income, ROA) sebagai input utama model.
+* Pengecekan Duplikat artinya memastikan data unik berdasarkan kombinasi kolom `date` dan `ticker`.
+* Feature Selection artinya memilih fitur teknikal (OHLCV + Indikator) dan fundamental (Assets, Liabilities, Revenue, Net Income, ROA) sebagai input utama model.
 
 ### 4. Split Training & Test Data (Time-Series Split)
 Dataset dibagi berdasarkan urutan waktu untuk menghindari *look-ahead bias*.
-* **Rasio:** Data dibagi menjadi 80% untuk data latih (*training data*) dan 20% untuk data uji (*test data*).
-* **Metode:** Menggunakan Time-Series Split, di mana data historis awal digunakan untuk melatih model, dan data terbaru digunakan sebagai validasi untuk menguji kemampuan model dalam memprediksi harga di masa depan.
+Rasio data dibagi menjadi 80% untuk data latih (*training data*) dan 20% untuk data uji (*test data*). Metodenya menggunakan Time-Series Split, di mana data historis awal digunakan untuk melatih model, dan data terbaru digunakan sebagai validasi untuk menguji kemampuan model dalam memprediksi harga di masa depan.
 
 ## Modeling
 
@@ -213,10 +212,7 @@ Sistem secara otomatis menghitung dan menampilkan performa model dengan metrik s
 * **R-Squared (R2):** Menunjukkan sejauh mana variabel independen (teknikal & fundamental) mampu menjelaskan variasi pergerakan harga saham. Nilai yang mendekati 1.0 menunjukkan model sangat *fit* dengan pola data.
 
 ### 2. Analisis Backtesting Strategi
-Selain metrik statistik, dilakukan evaluasi praktis melalui simulasi perdagangan (*backtesting*) untuk mengukur performa model dalam skenario investasi riil di GIBEI Telkom University. Berdasarkan *output* pada sel terakhir:
-
-* **Strategy Return:** `-0.0837` (atau sekitar **-8.37%**).
-* **Interpretasi:** Angka ini merupakan hasil simulasi keuntungan/kerugian jika keputusan investasi didasarkan sepenuhnya pada sinyal prediksi model selama periode data uji. 
+Selain metrik statistik, dilakukan evaluasi praktis melalui simulasi perdagangan (*backtesting*) untuk mengukur performa model dalam skenario investasi riil di GIBEI Telkom University. Berdasarkan *output* pada sel terakhir. Strategy Return yang di hasilkan `-0.0837` (atau sekitar **-8.37%**). Angka ini merupakan hasil simulasi keuntungan/kerugian jika keputusan investasi didasarkan sepenuhnya pada sinyal prediksi model selama periode data uji. 
 
 Meskipun *return* strategi menunjukkan angka negatif pada periode evaluasi ini (menandakan kondisi pasar yang sedang *bearish* pada waktu tersebut), model tetap memberikan nilai penting berupa data yang objektif untuk meminimalkan risiko spekulasi manual yang tidak terukur.
 
