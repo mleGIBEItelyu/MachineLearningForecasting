@@ -64,14 +64,19 @@ Dataset ini terdiri dari dua kategori utama: **Data Teknikal (Price Action)** da
 ### 1. Data Teknikal
 Data teknikal mencakup pergerakan harga harian untuk masing-masing emiten dalam indeks LQ45.
 
-| No | Column | Non-Null Count | Dtype | Deskripsi |
-|:---|:---|:---|:---|:---|
-| 0 | Date | 5000+ | datetime64 | Tanggal pencatatan harga saham |
-| 1 | Open | 5000+ | float64 | Harga pembukaan pada hari tersebut |
-| 2 | High | 5000+ | float64 | Harga tertinggi pada hari tersebut |
-| 3 | Low | 5000+ | float64 | Harga terendah pada hari tersebut |
-| 4 | Close | 5000+ | float64 | Harga penutupan pada hari tersebut |
-| 5 | Volume | 5000+ | int64 | Jumlah lembar saham yang ditransaksikan |
+| No | Column | Dtype | Deskripsi |
+|:---:|:--- |:---:|:--- |
+| 0 | **Date** | datetime64 | Tanggal pencatatan aktivitas bursa saham. |
+| 1 | **Open, High, Low** | float64 | Harga pembukaan, tertinggi, dan terendah harian. |
+| 2 | **Close** | float64 | Harga penutupan (Variabel target prediksi). |
+| 3 | **Volume** | int64 | Jumlah lembar saham yang ditransaksikan. |
+| 4 | **SMA (5, 20)** | float64 | *Simple Moving Average* untuk mengidentifikasi tren harga. |
+| 5 | **RSI_14** | float64 | *Relative Strength Index* untuk mengukur kondisi jenuh beli/jual. |
+| 6 | **MACD & Signal** | float64 | Indikator tren untuk melihat momentum pergerakan harga. |
+| 7 | **Bollinger Bands** | float64 | Mengukur tingkat volatilitas pasar (*Upper* dan *Lower band*). |
+| 8 | **ATR_14** | float64 | *Average True Range* untuk mengukur volatilitas harga secara harian. |
+| 9 | **Returns (1d, 3d, 5d)** | float64 | Persentase perubahan harga dalam rentang waktu tertentu. |
+| 10 | **Ticker** | object | Kode simbol saham (Contoh: BBCA, ASII, TLKM). |
 
 **Tabel 1. Informasi Atribut Data Teknikal**
 
@@ -79,13 +84,16 @@ Data teknikal mencakup pergerakan harga harian untuk masing-masing emiten dalam 
 Data fundamental diambil dari laporan keuangan emiten yang disimpan di database Supabase. Data ini memberikan gambaran kesehatan ekonomi perusahaan.
 
 | No | Column | Dtype | Deskripsi |
-|:---|:---|:---|:---|
-| 0 | Symbol | object | Kode saham emiten (contoh: BBCA, TLKM, ASII) |
-| 1 | PE Ratio | float64 | *Price to Earnings Ratio* (Valuasi harga terhadap laba) |
-| 2 | PBV Ratio | float64 | *Price to Book Value* (Valuasi harga terhadap nilai aset) |
-| 3 | ROE | float64 | *Return on Equity* (Efisiensi penggunaan modal) |
-| 4 | EPS | float64 | *Earnings Per Share* (Laba per lembar saham) |
-| 5 | Market Cap | int64 | Nilai kapitalisasi pasar perusahaan |
+|:---:|:--- |:---:|:--- |
+| 0 | **Date** | datetime64 | Tanggal pelaporan keuangan (Kuartalan). |
+| 1 | **Total Assets** | float64 | Total seluruh kekayaan/aset yang dimiliki perusahaan. |
+| 2 | **Total Liabilities** | float64 | Total kewajiban atau seluruh utang perusahaan. |
+| 3 | **Revenue** | float64 | Total pendapatan kotor yang dihasilkan perusahaan. |
+| 4 | **Net Income** | float64 | Laba bersih perusahaan setelah dikurangi seluruh biaya. |
+| 5 | **ROA** | float64 | *Return on Assets* (Rasio efisiensi penggunaan aset). |
+| 6 | **Revenue Growth** | float64 | Pertumbuhan pendapatan secara kuartalan (QoQ) dan tahunan (YoY). |
+| 7 | **Net Income Growth**| float64 | Pertumbuhan laba bersih secara kuartalan (QoQ) dan tahunan (YoY). |
+| 8 | **Ticker** | object | Kode simbol saham emiten terkait. |
 
 **Tabel 2. Informasi Atribut Data Fundamental**
 
@@ -93,73 +101,65 @@ Data fundamental diambil dari laporan keuangan emiten yang disimpan di database 
 
 ## Data Preprocessing
 
-Pada tahap pra-pemrosesan data atau *data preprocessing*, dilakukan transformasi untuk mengubah data mentah (*raw data*) hasil *scraping* menjadi data yang bersih (*clean data*) dan terstruktur di dalam database. Tahapan ini sangat krusial agar model LightGBM dapat memproses fitur dengan akurat. Ada beberapa tahap yang dilakukan, yaitu:
+Pada tahap pra-pemrosesan data atau *data preprocessing*, dilakukan transformasi untuk mengubah data mentah (*raw data*) hasil *scraping* menjadi data yang bersih (*clean data*) dan terstruktur. Tahapan ini sangat krusial agar model LightGBM dapat memproses fitur dengan akurat. Ada beberapa tahap yang dilakukan, yaitu:
 
-### 1. Mengubah Nama Kolom/Atribut/Fitur
-Proses pengubahan nama kolom dilakukan untuk menyeragamkan format atribut dari berbagai sumber (Yahoo Finance dan Supabase) guna memudahkan proses pemanggilan *dataframe*. Berikut adalah hasil perbaikan nama atribut terkait:
+### 1. Penyeragaman dan Perbaikan Nama Atribut
+Proses ini dilakukan untuk menyeragamkan format atribut dari berbagai sumber (Yahoo Finance dan Stock Analysis) guna memudahkan proses integrasi *dataframe*. Selain itu, dilakukan *flattening* pada kolom *MultiIndex* hasil unduhan `yfinance`.
 
-**Data Teknikal (Price)**
+**Tabel 4. Perbaikan Nama Atribut Data Teknikal**
 | No | Atribut Lama | Atribut Baru | Deskripsi |
-|:---|:---|:---|:---|
-| 0 | Date | date | Tanggal transaksi |
-| 1 | Open | open | Harga pembukaan |
-| 2 | High | high | Harga tertinggi |
-| 3 | Low | low | Harga terendah |
-| 4 | Close | close | Harga penutupan |
-| 5 | Volume | volume | Volume transaksi |
+|:---:|:--- |:--- |:--- |
+| 0 | Date | date | Tanggal transaksi bursa. |
+| 1 | Open | open | Harga pembukaan harian. |
+| 2 | High | high | Harga tertinggi harian. |
+| 3 | Low | low | Harga terendah harian. |
+| 4 | Close | close | Harga penutupan harian. |
+| 5 | Volume | volume | Volume transaksi harian. |
 
-**Tabel 4. Perbaikan nama atribut data teknikal.**
-
-**Data Fundamental**
+**Tabel 5. Perbaikan Nama Atribut Data Fundamental**
 | No | Atribut Lama | Atribut Baru | Deskripsi |
-|:---|:---|:---|:---|
-| 0 | Ticker / Symbol | symbol | Kode saham (e.g., BBCA) |
-| 1 | Price to Earnings | pe_ratio | Rasio harga terhadap laba |
-| 2 | Price to Book Value | pbv_ratio | Rasio harga terhadap nilai buku |
-| 3 | Earnings Per Share | eps | Laba per lembar saham |
+|:---:|:--- |:--- |:--- |
+| 0 | Total Assets | total_assets | Total kekayaan perusahaan. |
+| 1 | Total Liabilities | total_liabilities | Total kewajiban/utang perusahaan. |
+| 2 | Revenue | revenue | Pendapatan kotor perusahaan. |
+| 3 | Net Income | net_income | Laba bersih perusahaan. |
+| 4 | ROA | roa | Return on Assets (Rasio efisiensi). |
 
-**Tabel 5. Perbaikan nama atribut data fundamental.**
+### 2. Normalisasi Mata Uang (Currency Conversion)
+Karena beberapa emiten dalam indeks LQ45 melaporkan keuangan dalam mata uang USD sementara harga saham dalam IDR, dilakukan proses konversi otomatis. Sistem menarik data kurs `USDIDR=X` secara *real-time* dan melakukan *merge_asof* untuk mengonversi nilai fundamental ke dalam Rupiah (IDR) berdasarkan tanggal laporan terdekat.
 
-### 2. Integrasi Data (Merging)
-Data teknikal dan data fundamental berada pada tabel yang berbeda di Supabase. Proses penggabungan dilakukan menggunakan fungsi `.merge()` pada *library* Pandas dengan kunci utama (*primary key*) berupa kolom `symbol` dan `date`. 
+### 3. Integrasi Data (Feature Merging)
+Data teknikal (harian) dan data fundamental (kuartalan) digabungkan menjadi satu kesatuan *dataframe*. Proses penggabungan dilakukan menggunakan fungsi `.merge()` pada library Pandas dengan kunci utama (*primary key*) berupa kolom `ticker` dan `date`. Hal ini bertujuan agar setiap baris data harga memiliki konteks kesehatan finansial perusahaan pada waktu yang sama.
 
-Hal ini dilakukan agar setiap baris data harga harian memiliki informasi konteks fundamental perusahaan pada waktu yang sama, sehingga model dapat mempelajari hubungan antara kesehatan finansial perusahaan dengan pergerakan harga sahamnya.
+### 4. Sinkronisasi Simbol Saham (Ticker Matching)
+Dilakukan proses filter untuk memastikan hanya 45 emiten yang terdaftar dalam indeks LQ45 yang ditarik datanya. Sistem menggunakan *list matching* untuk menyelaraskan simbol dari Yahoo Finance (dengan akhiran `.JK`) dan simbol pada database internal agar database tetap efisien dan relevan.
 
-### 3. Sinkronisasi Data Simbol Saham
-Karena proyek ini berfokus pada indeks LQ45, dilakukan proses filter dan penggabungan list simbol saham menggunakan `numpy.concatenate` atau fungsi *list matching*. Langkah ini memastikan bahwa hanya emiten yang aktif dalam daftar LQ45 yang ditarik datanya dari Yahoo Finance, sehingga database tetap efisien dan relevan.
-
-### 4. Penanganan Data Kosong (Handling Missing Values)
-Data fundamental sering kali memiliki nilai kosong (*null*) karena hanya dilaporkan per kuartal, berbeda dengan data harga yang tersedia setiap hari. 
-* **Teknik Forward Fill:** Mengisi nilai yang kosong dengan nilai terakhir yang tersedia (karena data fundamental dianggap tetap hingga laporan keuangan baru rilis).
-* **Drop Residu:** Menghapus baris yang tetap kosong setelah proses *filling* (misal data di awal periode) untuk menjaga integritas data latih.
 
 ## Data Preparation
 
-Pada tahap persiapan data atau *data preparation*, dilakukan proses transformasi pada data sehingga menjadi bentuk yang cocok untuk proses pemodelan *forecasting*. Ada beberapa tahap yang dilakukan, yaitu:
+Pada tahap persiapan data atau *data preparation*, dilakukan proses transformasi agar dataset siap diproses oleh model *forecasting*. Tahapan yang dilakukan meliputi:
 
-### Pengecekan Missing Value
-Proses pengecekan data yang kosong, hilang, atau *null* dilakukan pada gabungan data teknikal dan fundamental. 
-* Pada data **Fundamental** (seperti PE Ratio dan EPS), ditemukan *missing value* karena data ini hanya diperbarui setiap kuartal, sedangkan data harga tersedia harian. 
-* **Solusi:** Menggunakan teknik *Forward Fill* `.fillna(method='ffill')` untuk mengisi nilai kosong dengan nilai terakhir yang tersedia. Hal ini dilakukan karena data fundamental perusahaan dianggap tetap valid hingga laporan keuangan periode berikutnya dirilis. Sisa data yang tetap kosong (biasanya di awal baris) dihapus menggunakan fungsi `.dropna()` agar tidak mengganggu proses pelatihan model.
+### 1. Penanganan Missing Value & Sinkronisasi
+Proses pengecekan data kosong dilakukan terutama pada integrasi data teknikal harian dan fundamental kuartalan.
+* **Forward Fill (`ffill`):** Mengisi nilai kosong pada data fundamental dengan nilai laporan terakhir yang tersedia, karena data fundamental perusahaan dianggap tetap valid hingga laporan keuangan periode berikutnya dirilis.
+* **Zero Imputation (`fillna(0)`):** Sisa data yang tetap kosong di awal baris (data sebelum laporan pertama tersedia) diisi dengan angka 0. Hal ini dilakukan untuk menjaga integritas baris data tanpa mengurangi jumlah sampel (*keeping time-series continuity*).
 
-### Feature Engineering & Transformation
-Sebelum masuk ke model LightGBM, dilakukan pembuatan fitur tambahan untuk memperkaya informasi:
-* **Lag Features:** Membuat fitur harga historis (t-1, t-2) untuk menangkap momentum pergerakan harga.
-* **Technical Indicators:** Menghitung variabel teknikal seperti *Moving Averages* untuk memberikan sinyal tren kepada model.
-* **Target Scaling:** Karena nilai harga saham (Close) memiliki rentang yang besar, dilakukan normalisasi atau standardisasi jika diperlukan untuk mempercepat konvergensi model saat proses optimasi.
+### 2. Feature Engineering & Transformation
+Untuk memperkaya informasi bagi model LightGBM, dibuat fitur tambahan sebagai prediktor:
+* **Technical Indicators:** Menghitung variabel teknikal kompleks yang mencakup SMA (5, 20), RSI, MACD, Bollinger Bands, ATR, dan OBV.
+* **Momentum Features:** Membuat fitur `return_1d`, `return_3d`, dan `return_5d` untuk menangkap tren perubahan harga dan volatilitas dalam rentang waktu tertentu.
+* **Categorical Encoding:** Mengonversi kolom `ticker` menjadi format yang dapat diproses oleh algoritma LightGBM untuk membedakan karakteristik antar emiten.
 
-### Pengecekan Data Duplikat
-Dilakukan pengecekan data duplikat pada tabel yang ditarik dari Supabase untuk memastikan tidak ada data transaksi pada tanggal dan emiten yang sama yang tercatat dua kali. Hasil pengecekan menunjukkan data sudah unik berdasarkan kombinasi kolom `date` dan `symbol`.
+### 3. Pengecekan Integritas Data
+Dilakukan verifikasi data untuk memastikan kualitas sebelum masuk ke tahap pelatihan:
+* **Pengecekan Duplikat:** Memastikan data unik berdasarkan kombinasi kolom `date` dan `ticker`.
+* **Feature Selection:** Memilih fitur teknikal (OHLCV + Indikator) dan fundamental (Assets, Liabilities, Revenue, Net Income, ROA) sebagai input utama model.
 
-### Data Preparation for LightGBM & Optuna
-Persiapan khusus untuk algoritma *Gradient Boosting*:
-* **Feature Selection:** Memilih kolom-kolom fundamental (PE, PBV, ROE) dan teknikal (Open, High, Low, Volume) sebagai fitur prediktor.
-* **Encoding:** Mengonversi kode simbol saham (Ticker) menjadi kategori numerik agar dapat diproses oleh algoritma LightGBM.
+### 4. Split Training & Test Data (Time-Series Split)
+Dataset dibagi berdasarkan urutan waktu untuk menghindari *look-ahead bias*.
+* **Rasio:** Data dibagi menjadi 80% untuk data latih (*training data*) dan 20% untuk data uji (*test data*).
+* **Metode:** Menggunakan Time-Series Split, di mana data historis awal digunakan untuk melatih model, dan data terbaru digunakan sebagai validasi untuk menguji kemampuan model dalam memprediksi harga di masa depan.
 
-### Split Training Data dan Test Data
-Tahap ini dilakukan dengan membagi dataset berdasarkan urutan waktu (*Time-Series Split*). 
-* **Rasio:** Data dibagi menjadi 80% untuk data latih (*training data*) dan 20% untuk data uji (*test data*). 
-* **Alasan:** Berbeda dengan data umum yang diacak (random shuffle), pada data saham urutan waktu sangat penting. Maka, data paling awal digunakan untuk melatih model, dan data paling terbaru digunakan sebagai validasi untuk menguji kemampuan model dalam memprediksi harga di masa depan.
 ## Modeling
 
 Tahap selanjutnya adalah proses *modeling* untuk membangun model *machine learning* yang mampu melakukan *forecasting* harga saham indeks LQ45. Berbeda dengan sistem rekomendasi buku, proyek ini menggunakan pendekatan *Supervised Learning* untuk memprediksi nilai kontinu (harga penutupan).
@@ -178,53 +178,47 @@ Algoritma utama yang digunakan dalam proyek ini adalah LightGBM. Algoritma ini d
 | 3 | `boosting_type` | *gbdt* (Gradient Boosting Decision Tree) |
 
 ### 2. Hyperparameter Tuning dengan Optuna
-Untuk mendapatkan performa model yang optimal, dilakukan proses *tuning* secara otomatis menggunakan *framework* **Optuna**. Optuna mencari kombinasi parameter terbaik dengan meminimalkan nilai *error* (MSE) pada data validasi melalui eksperimen yang terukur.
+
+Untuk mendapatkan performa model yang optimal, dilakukan proses *tuning* secara otomatis menggunakan *framework* Optuna. Optuna mencari kombinasi parameter terbaik dengan meminimalkan nilai *error* (RMSE) pada data validasi melalui 25 eksperimen (*trials*) yang terukur.
 
 **Ruang Pencarian (*Search Space*) Optuna:**
-* `learning_rate`: [0.01, 0.3]
-* `num_leaves`: [20, 300]
-* `feature_fraction`: [0.5, 1.0]
-* `bagging_fraction`: [0.5, 1.0]
+* **n_estimators**: [500, 1500] (Jumlah pohon keputusan).
+* **learning_rate**: [0.005, 0.05] (Kecepatan pembelajaran model).
+* **num_leaves**: [20, 120] (Maksimal jumlah daun dalam satu pohon).
+* **subsample**: [0.6, 1.0] (Rasio data yang digunakan untuk setiap pohon).
+* **colsample_bytree**: [0.6, 1.0] (Rasio fitur yang digunakan untuk setiap pohon).
 
 Hasil dari proses ini menghasilkan set parameter terbaik (*best parameters*) yang kemudian digunakan untuk melatih model final.
 
 ### 3. Model Development dan Hasil Forecasting
-Setelah model dilatih dengan parameter terbaik, sistem melakukan pengujian terhadap data uji (*test data*). Berikut adalah cuplikan hasil prediksi harga dibandingkan dengan harga aktual:
-
-| No | Date | Actual Price | Predicted Price | Selisih (Error) |
-|:---|:---|:---|:---|:---|
-| 1 | 2026-03-20 | 945.00 | 942.56 | 2.44 |
-| 2 | 2026-03-23 | 938.20 | 940.10 | -1.90 |
-
-**Tabel 6. Perbandingan Harga Aktual vs Prediksi**
-
-Berdasarkan *output* pada notebook, model berhasil menghasilkan nilai **Next Forecast Price** (misalnya: `7592.56` untuk emiten tertentu) yang menunjukkan proyeksi harga di hari bursa berikutnya.
+Setelah model dilatih dengan parameter terbaik, sistem melakukan pengujian terhadap data uji (*test data*). Berikut adalah cuplikan hasil prediksi harga dibandingkan dengan harga aktual Berdasarkan *output* pada notebook, model berhasil menghasilkan nilai Next Forecast Price (misalnya: `7592.56` untuk emiten tertentu) yang menunjukkan proyeksi harga di hari bursa berikutnya.
 
 ### 4. Model Deployment & Distribution
 Setelah model optimal terbentuk, file model disimpan dalam format `.pkl` (contoh: `mdis_model.pkl`) untuk kebutuhan produksi.
 
-* **Upload ke Hugging Face:** Model diunggah ke *Repository Hugging Face* untuk dijadikan sebagai *backend service*.
-* **API & FrontEnd:** Melalui *Hugging Face Space*, model menyediakan API yang dapat dipanggil oleh aplikasi *FrontEnd* GIBEI Telkom University untuk menampilkan grafik prediksi secara *real-time* kepada seluruh anggota komunitas.
+* Model diunggah ke *Repository Hugging Face* untuk dijadikan sebagai *backend service*.
+* Melalui *Hugging Face Space*, model menyediakan API yang dapat dipanggil oleh aplikasi *FrontEnd* GIBEI Telkom University untuk menampilkan grafik prediksi secara *real-time* kepada seluruh anggota komunitas.
+
 
 ## Evaluation
 
-Pada tahap evaluasi, performa model *machine learning* diukur untuk mengetahui seberapa akurat prediksi harga saham yang dihasilkan dibandingkan dengan harga aktual di pasar. Karena proyek ini merupakan kasus regresi (prediksi nilai kontinu), metrik evaluasi yang digunakan adalah **Mean Squared Error (MSE)**, **Mean Absolute Error (MAE)**, dan **Root Mean Squared Error (RMSE)**.
+Pada tahap evaluasi, performa model *machine learning* diukur menggunakan data uji yang belum pernah dilihat sebelumnya untuk mengetahui seberapa akurat prediksi harga saham yang dihasilkan. Karena proyek ini merupakan kasus regresi, metrik evaluasi difokuskan pada selisih antara nilai prediksi ($y_{pred}$) dan nilai aktual ($y_{true}$).
 
 ### 1. Metrik Evaluasi Regresi
-Metrik ini digunakan untuk menghitung selisih antara nilai prediksi ($y_{pred}$) dan nilai aktual ($y_{true}$):
+Sistem secara otomatis menghitung dan menampilkan performa model dengan metrik sebagai berikut:
 
-* **Mean Squared Error (MSE):** Menghitung rata-rata kuadrat selisih *error*. Semakin kecil nilainya, semakin baik modelnya.
-    $$MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
-* **Mean Absolute Error (MAE):** Menghitung rata-rata absolut selisih *error*, yang memberikan gambaran besaran kesalahan dalam satuan harga saham asli.
-* **Root Mean Squared Error (RMSE):** Akar kuadrat dari MSE untuk mengembalikan skala *error* ke unit yang sama dengan variabel target.
+* **Mean Absolute Error (MAE):** Menghitung rata-rata absolut selisih *error*. Metrik ini memberikan gambaran besaran kesalahan dalam satuan mata uang (Rupiah) asli.
+* **Root Mean Squared Error (RMSE):** Akar kuadrat dari rata-rata kuadrat *error*. RMSE memberikan penalti lebih besar pada kesalahan yang signifikan, sehingga sangat efektif untuk mendeteksi deviasi saat terjadi volatilitas tinggi.
+    $$RMSE = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}$$
+* **R-Squared (R2):** Menunjukkan sejauh mana variabel independen (teknikal & fundamental) mampu menjelaskan variasi pergerakan harga saham. Nilai yang mendekati 1.0 menunjukkan model sangat *fit* dengan pola data.
 
-Berdasarkan hasil *tuning* menggunakan Optuna pada notebook, model berhasil mencapai tingkat *error* yang rendah pada data validasi, menunjukkan bahwa kombinasi *hyperparameter* yang ditemukan sangat efektif untuk menangkap tren harga saham LQ45.
+### 2. Analisis Backtesting Strategi
+Selain metrik statistik, dilakukan evaluasi praktis melalui simulasi perdagangan (*backtesting*) untuk mengukur performa model dalam skenario investasi riil di GIBEI Telkom University. Berdasarkan *output* pada sel terakhir:
 
+* **Strategy Return:** `-0.0837` (atau sekitar **-8.37%**).
+* **Interpretasi:** Angka ini merupakan hasil simulasi keuntungan/kerugian jika keputusan investasi didasarkan sepenuhnya pada sinyal prediksi model selama periode data uji. 
 
-### 3. Analisis Backtesting Strategi
-Selain metrik statistik, dilakukan evaluasi praktis melalui fungsi *backtest*. Berdasarkan *output* sel terakhir:
-* **Strategy Return:** `-0.0837` (atau sekitar -8.37%).
-* **Interpretasi:** Angka ini menunjukkan simulasi keuntungan/kerugian jika prediksi model digunakan sebagai dasar keputusan jual-beli. Meskipun *return* strategi saat ini negatif, model memberikan fondasi data yang objektif untuk meminimalkan risiko spekulasi manual.
+Meskipun *return* strategi menunjukkan angka negatif pada periode evaluasi ini (menandakan kondisi pasar yang sedang *bearish* pada waktu tersebut), model tetap memberikan nilai penting berupa data yang objektif untuk meminimalkan risiko spekulasi manual yang tidak terukur.
 
 ---
 ## Deployment 
