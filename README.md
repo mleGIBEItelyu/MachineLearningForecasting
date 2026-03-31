@@ -12,7 +12,7 @@ Melalui pemanfaatan teknologi kecerdasan buatan, Divisi Machine Learning Enginee
 
 Penelitian menunjukkan bahwa integrasi data fundamental dan teknikal menggunakan algoritma *gradient boosting* dapat meningkatkan akurasi prediksi harga saham secara signifikan [2]. Dengan demikian, di dalam proyek ini, Divisi Machine Learning Engineer akan membuat sebuah *pipeline* data secara *end-to-end* beserta modul pemodelannya.
 
-Proyek ini mengotomatisasi proses *data scraping* dari Yahoo Finance untuk mengambil variabel Data Teknikal dan Data Fundamental, yang kemudian disimpan langsung ke sistem *database* Supabase. Data tersebut melalui tahap transformasi (*Feature Merging*) sebelum masuk ke fase *Data Mining*. Pada tahap *Modeling*, sistem melatih model prediksi menggunakan algoritma **LightGBM** dengan optimasi **Optuna**, lalu melakukan evaluasi metrik. Setelah model optimal terbentuk, file model diunggah ke *Hugging Face Space* agar hasil *forecasting* dapat didistribusikan melalui integrasi API ke sisi *FrontEnd* sebagai alat bantu keputusan investasi yang cerdas bagi seluruh anggota GIBEI Telkom University.
+Proyek ini mengotomatisasi proses *data scraping* dari Yahoo Finance untuk mengambil variabel Data Teknikal dan Data Fundamental, yang kemudian disimpan langsung ke sistem *database* Supabase. Data tersebut melalui tahap transformasi (*Feature Merging*) sebelum masuk ke fase *Data Mining*. Pada tahap *Modeling*, sistem melatih model prediksi menggunakan algoritma LightGBM dengan optimasi Optuna, lalu melakukan evaluasi metrik. Setelah model optimal terbentuk, file model diunggah ke *Hugging Face Space* agar hasil *forecasting* dapat didistribusikan melalui integrasi API ke sisi *FrontEnd* sebagai alat bantu keputusan investasi yang cerdas bagi seluruh anggota GIBEI Telkom University.
 
 ## Business Understanding
 
@@ -26,18 +26,16 @@ Berdasarkan latar belakang yang telah dijelaskan, maka diperoleh rumusan masalah
 Berdasarkan rumusan masalah tersebut, maka didapatkan tujuan dari proyek ini, yaitu:
 * Mengotomatisasi proses pengumpulan data (*scraping*) agar riset pasar di GIBEI menjadi lebih efisien dan minim kesalahan manual.
 * Melakukan transformasi dan penggabungan (*merge*) data teknikal serta fundamental menjadi dataset yang bersih dan siap latih.
-* Membangun model prediksi harga saham menggunakan **LightGBM** dengan optimasi **Optuna** untuk menghasilkan akurasi yang tinggi.
+* Membangun model prediksi harga saham menggunakan LightGBM dengan optimasi Optuna untuk menghasilkan akurasi yang tinggi.
 
 ### Solution Statements
-![Gambar 1. Diagram alir kerja Market Data Intelligence System](flowchart_mdis.png)
-> **Catatan:** Gambar 1 menunjukkan proses *end-to-end* dari *data scraping*, penyimpanan *database*, hingga *deployment* di Hugging Face.
 
 Berikut adalah langkah-langkah solusi untuk mencapai tujuan proyek:
 
 #### 1. Tahap Data Preprocessing & Pipeline
 Tahap ini bertujuan mengubah *raw data* dari Yahoo Finance menjadi data yang terstruktur di database.
 * Menggunakan library `yfinance` untuk menarik data *Open, High, Low, Close, Volume* serta data fundamental saham.
-* Menyimpan data secara otomatis ke **Supabase** menggunakan koneksi API untuk memastikan data selalu *up-to-date* [3].
+* Menyimpan data secara otomatis ke Supabase menggunakan koneksi API untuk memastikan data selalu *up-to-date* [3].
 
 #### 2. Tahap Data Preparation
 Transformasi data agar cocok untuk proses pemodelan, meliputi:
@@ -46,16 +44,16 @@ Transformasi data agar cocok untuk proses pemodelan, meliputi:
 * **Merging:** Menyatukan data dari berbagai sumber berdasarkan *timestamp* yang sesuai.
 
 #### 3. Tahap Building Machine Learning Model
-Pembuatan model menggunakan pendekatan *Supervised Learning* dengan algoritma **LightGBM**.
+Pembuatan model menggunakan pendekatan *Supervised Learning* dengan algoritma LightGBM.
 
 * **LightGBM (Light Gradient Boosting Machine):**
   Algoritma ini dipilih karena kecepatannya dalam melatih data besar dan kemampuannya menangani fitur yang kompleks secara efisien [4]. LightGBM menggunakan teknik *Leaf-wise tree growth* yang cenderung menghasilkan *loss* lebih rendah dibandingkan algoritma *level-wise* lainnya.
 
 * **Hyperparameter Tuning dengan Optuna:**
-  Untuk mendapatkan hasil terbaik, proyek ini menggunakan **Optuna** sebagai *framework* optimasi otomatis. Optuna bekerja dengan mencoba berbagai kombinasi parameter (seperti `learning_rate`, `num_leaves`, dan `feature_fraction`) untuk meminimalkan nilai *error* pada data validasi [5].
+  Untuk mendapatkan hasil terbaik, proyek ini menggunakan Optuna sebagai *framework* optimasi otomatis. Optuna bekerja dengan mencoba berbagai kombinasi parameter (seperti `learning_rate`, `num_leaves`, dan `feature_fraction`) untuk meminimalkan nilai *error* pada data validasi [5].
 
 * **Metrik Evaluasi:**
-  Model dievaluasi menggunakan **Mean Squared Error (MSE)** dan **Mean Absolute Error (MAE)** untuk mengukur seberapa jauh selisih antara harga prediksi dengan harga aktual di pasar.
+  Model dievaluasi menggunakan Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), dan R2 Score untuk mengukur seberapa jauh selisih antara harga prediksi dengan harga aktual di pasar.
 
 ## Data Understanding
 
@@ -93,37 +91,9 @@ Data fundamental diambil dari laporan keuangan emiten yang disimpan di database 
 
 ---
 
-### Deskripsi Statistik
-Berdasarkan data harga penutupan (*Close Price*) pada indeks yang telah diolah, berikut adalah ringkasan statistiknya:
-
-| No | Statistik | Nilai |
-|:---|:---|:---|
-| 1 | Count | 1.250 |
-| 2 | Mean | 950.45 |
-| 3 | Std | 120.30 |
-| 4 | Min | 650.20 |
-| 5 | 25% | 880.00 |
-| 6 | 50% | 945.15 |
-| 7 | 75% | 1020.50 |
-| 8 | Max | 1250.75 |
-
-**Tabel 3. Statistik Deskriptif Harga Close LQ45**
-
-Dari Tabel 3 di atas, dapat dilihat sebaran harga indeks yang cukup fluktuatif dengan standar deviasi yang menunjukkan tingkat volatilitas pasar.
-
-### Visualisasi Data
-Berikut adalah visualisasi tren harga penutupan untuk melihat pola pergerakan harga saham:
-
-![Gambar 2. Grafik Tren Harga Historis LQ45](flowchart_mdis.png) 
-*(Ganti link ini dengan file screenshot grafik line chart dari notebook kamu)*
-
-**Gambar 2. Visualisasi Pergerakan Harga Close Saham**
-
-Berdasarkan hasil visualisasi pada Gambar 2, terlihat adanya fluktuasi harga yang dipengaruhi oleh sentimen pasar. Terdapat beberapa area volatilitas tinggi yang ditangani pada tahap *preprocessing* agar tidak menyebabkan bias pada model **LightGBM**.
-
 ## Data Preprocessing
 
-Pada tahap pra-pemrosesan data atau *data preprocessing*, dilakukan transformasi untuk mengubah data mentah (*raw data*) hasil *scraping* menjadi data yang bersih (*clean data*) dan terstruktur di dalam database. Tahapan ini sangat krusial agar model **LightGBM** dapat memproses fitur dengan akurat. Ada beberapa tahap yang dilakukan, yaitu:
+Pada tahap pra-pemrosesan data atau *data preprocessing*, dilakukan transformasi untuk mengubah data mentah (*raw data*) hasil *scraping* menjadi data yang bersih (*clean data*) dan terstruktur di dalam database. Tahapan ini sangat krusial agar model LightGBM dapat memproses fitur dengan akurat. Ada beberapa tahap yang dilakukan, yaitu:
 
 ### 1. Mengubah Nama Kolom/Atribut/Fitur
 Proses pengubahan nama kolom dilakukan untuk menyeragamkan format atribut dari berbagai sumber (Yahoo Finance dan Supabase) guna memudahkan proses pemanggilan *dataframe*. Berikut adalah hasil perbaikan nama atribut terkait:
@@ -156,7 +126,7 @@ Data teknikal dan data fundamental berada pada tabel yang berbeda di Supabase. P
 Hal ini dilakukan agar setiap baris data harga harian memiliki informasi konteks fundamental perusahaan pada waktu yang sama, sehingga model dapat mempelajari hubungan antara kesehatan finansial perusahaan dengan pergerakan harga sahamnya.
 
 ### 3. Sinkronisasi Data Simbol Saham
-Karena proyek ini berfokus pada indeks **LQ45**, dilakukan proses filter dan penggabungan list simbol saham menggunakan `numpy.concatenate` atau fungsi *list matching*. Langkah ini memastikan bahwa hanya emiten yang aktif dalam daftar LQ45 yang ditarik datanya dari Yahoo Finance, sehingga database tetap efisien dan relevan.
+Karena proyek ini berfokus pada indeks LQ45, dilakukan proses filter dan penggabungan list simbol saham menggunakan `numpy.concatenate` atau fungsi *list matching*. Langkah ini memastikan bahwa hanya emiten yang aktif dalam daftar LQ45 yang ditarik datanya dari Yahoo Finance, sehingga database tetap efisien dan relevan.
 
 ### 4. Penanganan Data Kosong (Handling Missing Values)
 Data fundamental sering kali memiliki nilai kosong (*null*) karena hanya dilaporkan per kuartal, berbeda dengan data harga yang tersedia setiap hari. 
@@ -197,7 +167,7 @@ Tahap selanjutnya adalah proses *modeling* untuk membangun model *machine learni
 Berdasarkan tahap *data understanding*, volume data yang ditarik dari Supabase mencakup puluhan emiten dengan rentang waktu historis yang panjang. Untuk menjaga efisiensi komputasi namun tetap mempertahankan kualitas prediksi, model dilatih menggunakan fitur-fitur teknikal dan fundamental yang telah diintegrasikan secara komprehensif.
 
 ### 1. LightGBM (Light Gradient Boosting Machine)
-Algoritma utama yang digunakan dalam proyek ini adalah **LightGBM**. Algoritma ini dipilih karena kemampuannya menangani data tabular berskala besar dengan kecepatan tinggi dan penggunaan memori yang efisien. LightGBM menggunakan teknik *Leaf-wise tree growth* yang memungkinkan model menemukan pola volatilitas harga saham lebih mendalam dibandingkan algoritma *level-wise* tradisional.
+Algoritma utama yang digunakan dalam proyek ini adalah LightGBM. Algoritma ini dipilih karena kemampuannya menangani data tabular berskala besar dengan kecepatan tinggi dan penggunaan memori yang efisien. LightGBM menggunakan teknik *Leaf-wise tree growth* yang memungkinkan model menemukan pola volatilitas harga saham lebih mendalam dibandingkan algoritma *level-wise* tradisional.
 
 **Parameter Awal Model:**
 
@@ -248,15 +218,8 @@ Metrik ini digunakan untuk menghitung selisih antara nilai prediksi ($y_{pred}$)
 * **Mean Absolute Error (MAE):** Menghitung rata-rata absolut selisih *error*, yang memberikan gambaran besaran kesalahan dalam satuan harga saham asli.
 * **Root Mean Squared Error (RMSE):** Akar kuadrat dari MSE untuk mengembalikan skala *error* ke unit yang sama dengan variabel target.
 
-Berdasarkan hasil *tuning* menggunakan **Optuna** pada notebook, model berhasil mencapai tingkat *error* yang rendah pada data validasi, menunjukkan bahwa kombinasi *hyperparameter* yang ditemukan sangat efektif untuk menangkap tren harga saham LQ45.
+Berdasarkan hasil *tuning* menggunakan Optuna pada notebook, model berhasil mencapai tingkat *error* yang rendah pada data validasi, menunjukkan bahwa kombinasi *hyperparameter* yang ditemukan sangat efektif untuk menangkap tren harga saham LQ45.
 
-### 2. Visualisasi Performa (Actual vs Prediction)
-Evaluasi juga dilakukan secara visual melalui grafik plot untuk melihat seberapa rapat garis prediksi mengikuti garis harga aktual.
-
-![Gambar 3. Grafik Actual vs Prediction](link_ke_gambar_grafik_kamu)
-**Gambar 3. Grafik Actual vs Prediction**
-
-Dari Gambar 3, grafik menunjukkan bahwa model mampu mengikuti arah tren harga (*trend following*) dengan baik. Meskipun terdapat sedikit *lag* atau selisih pada titik volatilitas ekstrim, secara keseluruhan model tidak menunjukkan gejala *overfitting* yang signifikan karena performa pada data uji tetap konsisten dengan data latih.
 
 ### 3. Analisis Backtesting Strategi
 Selain metrik statistik, dilakukan evaluasi praktis melalui fungsi *backtest*. Berdasarkan *output* sel terakhir:
