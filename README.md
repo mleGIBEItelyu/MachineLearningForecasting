@@ -152,8 +152,8 @@ Untuk memperkaya informasi bagi model LightGBM, dibuat fitur tambahan sebagai pr
 
 ### 3. Pengecekan Integritas Data
 Dilakukan verifikasi data untuk memastikan kualitas sebelum masuk ke tahap pelatihan:
-* Pengecekan Duplikat artinya memastikan data unik berdasarkan kombinasi kolom `date` dan `ticker`.
-* Feature Selection artinya memilih fitur teknikal (OHLCV + Indikator) dan fundamental (Assets, Liabilities, Revenue, Net Income, ROA) sebagai input utama model.
+* Pengecekan duplikat untuk memastikan data unik berdasarkan kombinasi kolom `date` dan `ticker`.
+* Feature selection untuk memilih fitur teknikal (OHLCV + Indikator) dan fundamental (Assets, Liabilities, Revenue, Net Income, ROA) sebagai input utama model.
 
 ### 4. Split Training & Test Data (Time-Series Split)
 Dataset dibagi berdasarkan urutan waktu untuk menghindari *look-ahead bias*.
