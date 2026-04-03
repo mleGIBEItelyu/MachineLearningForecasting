@@ -260,6 +260,13 @@ Data ini diperbarui secara berkala melalui pipeline scraping otomatis.
 **c. Visualisasi Chart Harga dan Prediksi**
 Aplikasi menyediakan grafik interaktif yang menampilkan:
 
+![WhatsApp Image 2026-04-03 at 16 33 14 (1)](https://github.com/user-attachments/assets/a39e38fe-903d-4b8c-b2a6-26452a95f300)
+
+
+
+
+
+
 * **Harga historis (actual price)**
 * **Hasil prediksi model (predicted price)**
 Visualisasi ini membantu pengguna memahami tren pasar secara lebih intuitif.
