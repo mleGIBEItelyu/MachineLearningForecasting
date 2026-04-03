@@ -280,7 +280,7 @@ Output yang ditampilkan:
 * **Persentase perubahan**
 * **Arah market**
 
-### 4.Integrasi Model dan API
+### 4. Integrasi Model dan API
 Model yang telah dilatih disimpan dalam format .pkl dan diunggah ke Hugging Face. 
 ![WhatsApp Image 2026-04-03 at 16 33 13 (1)](https://github.com/user-attachments/assets/899daf2e-b40d-4058-89d1-b7e3b8f798e8)
 Untuk mengakses sistem, pengguna harus melalui halaman autentikasi yang aman. Sistem login ini dibangun menggunakan NextAuth.js yang memungkinkan proses login dan manajemen sesi pengguna secara terintegrasi.
