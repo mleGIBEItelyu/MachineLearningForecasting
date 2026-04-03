@@ -250,10 +250,10 @@ Pada tahap deployment, model machine learning diintegrasikan ke dalam fitur-fitu
 
 **a. Pencarian Kode Saham**
 Pengguna dapat mencari saham berdasarkan kode emiten (misalnya BBCA, TLKM). Sistem akan mengambil data dari database dan menampilkan informasi terkait saham tersebut.
-![WhatsApp Image 2026-04-03 at 16 33 14 (2)](https://github.com/user-attachments/assets/487884cc-9830-422a-a0ad-0fdded0caae9)
-
 
 **Fitur Pencarian Kode Saham pada Sistem GIBEI Forecasting**
+![WhatsApp Image 2026-04-03 at 16 33 14 (2)](https://github.com/user-attachments/assets/487884cc-9830-422a-a0ad-0fdded0caae9)
+
 **b. Menampilkan Harga Saham Terkini**
 Sistem menampilkan data harga terbaru yang mencakup:
 * **Open, High, Low, Close**
