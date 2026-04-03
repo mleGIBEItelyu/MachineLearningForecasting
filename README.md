@@ -251,6 +251,7 @@ Pada tahap deployment, model machine learning diintegrasikan ke dalam fitur-fitu
 **a. Pencarian Kode Saham**
 Pengguna dapat mencari saham berdasarkan kode emiten (misalnya BBCA, TLKM). Sistem akan mengambil data dari database dan menampilkan informasi terkait saham tersebut.
 
+**Fitur Pencarian Kode Saham pada Sistem GIBEI Forecasting**
 **b. Menampilkan Harga Saham Terkini**
 Sistem menampilkan data harga terbaru yang mencakup:
 * **Open, High, Low, Close**
@@ -278,7 +279,11 @@ Output yang ditampilkan:
 * **Arah market**
 
 ### 4.Integrasi Model dan API
-Model yang telah dilatih disimpan dalam format .pkl dan diunggah ke Hugging Face. Platform ini menyediakan API endpoint yang digunakan oleh aplikasi untuk melakukan inference.
+Model yang telah dilatih disimpan dalam format .pkl dan diunggah ke Hugging Face. 
+![WhatsApp Image 2026-04-03 at 16 33 13 (1)](https://github.com/user-attachments/assets/899daf2e-b40d-4058-89d1-b7e3b8f798e8)
+Untuk mengakses sistem, pengguna harus melalui halaman autentikasi yang aman. Sistem login ini dibangun menggunakan NextAuth.js yang memungkinkan proses login dan manajemen sesi pengguna secara terintegrasi.
+
+Platform ini menyediakan API endpoint yang digunakan oleh aplikasi untuk melakukan inference.
 Alur integrasi:
 
 **1.Frontend mengirim request data saham**
