@@ -8,9 +8,9 @@ Selama ini aktivitas edukasi dan riset berjalan dengan baik, tetapi di tengah ti
 
 Melihat kendala operasional tersebut, Divisi Machine Learning Engineer menyadari bahwa mereka perlu turun tangan untuk memberikan solusi teknologi. Untuk membantu operasional divisi-divisi lain di GIBEI yang membutuhkan data riset cepat, Divisi Machine Learning Engineer berinisiatif membangun infrastruktur analisis yang lebih cerdas, efisien, dan terotomatisasi.
 
-Melalui pemanfaatan teknologi kecerdasan buatan, Divisi Machine Learning Engineer merancang sebuah program kerja bernama **"Market Data Intelligence System (MDIS)"** sebuah pengembangan *machine learning* untuk *forecasting* harga saham berbasis data pasar historis dan *real-time*. Sistem terintegrasi ini dirancang khusus untuk memproses volume data secara komprehensif dan menghasilkan prediksi arah saham yang lebih cepat serta akurat dibandingkan analisis manual [1].
+Melalui pemanfaatan teknologi kecerdasan buatan, Divisi Machine Learning Engineer merancang sebuah program kerja bernama **"Market Data Intelligence System (MDIS)"** sebuah pengembangan *machine learning* untuk *forecasting* harga saham berbasis data pasar historis dan *real-time*. Sistem terintegrasi ini dirancang khusus untuk memproses volume data secara komprehensif dan menghasilkan prediksi arah saham yang lebih cepat serta akurat dibandingkan analisis manual [^1].
 
-Penelitian menunjukkan bahwa integrasi data fundamental dan teknikal menggunakan algoritma *gradient boosting* dapat meningkatkan akurasi prediksi harga saham secara signifikan [2]. Dengan demikian, di dalam proyek ini, Divisi Machine Learning Engineer akan membuat sebuah *pipeline* data secara *end-to-end* beserta modul pemodelannya.
+Penelitian menunjukkan bahwa integrasi data fundamental dan teknikal menggunakan algoritma *gradient boosting* dapat meningkatkan akurasi prediksi harga saham secara signifikan [^2]. Dengan demikian, di dalam proyek ini, Divisi Machine Learning Engineer akan membuat sebuah *pipeline* data secara *end-to-end* beserta modul pemodelannya.
 
 Proyek ini mengotomatisasi proses *data scraping* dari Yahoo Finance untuk mengambil variabel Data Teknikal dan Data Fundamental, yang kemudian disimpan langsung ke sistem *database* Supabase. Data tersebut melalui tahap transformasi (*Feature Merging*) sebelum masuk ke fase *Data Mining*. Pada tahap *Modeling*, sistem melatih model prediksi menggunakan algoritma LightGBM dengan optimasi Optuna, lalu melakukan evaluasi metrik. Setelah model optimal terbentuk, file model diunggah ke *Hugging Face Space* agar hasil *forecasting* dapat didistribusikan melalui integrasi API ke sisi *FrontEnd* sebagai alat bantu keputusan investasi yang cerdas bagi seluruh anggota GIBEI Telkom University.
 
@@ -35,7 +35,7 @@ Berikut adalah langkah-langkah solusi untuk mencapai tujuan proyek:
 #### 1. Tahap Data Preprocessing & Pipeline
 Tahap ini bertujuan mengubah *raw data* dari Yahoo Finance menjadi data yang terstruktur di database.
 * Menggunakan library `yfinance` untuk menarik data *Open, High, Low, Close, Volume* serta data fundamental saham.
-* Menyimpan data secara otomatis ke Supabase menggunakan koneksi API untuk memastikan data selalu *up-to-date* [3].
+* Menyimpan data secara otomatis ke Supabase menggunakan koneksi API untuk memastikan data selalu *up-to-date* [^3].
 
 #### 2. Tahap Data Preparation
 Transformasi data agar cocok untuk proses pemodelan, meliputi:
@@ -47,10 +47,10 @@ Transformasi data agar cocok untuk proses pemodelan, meliputi:
 Pembuatan model menggunakan pendekatan *Supervised Learning* dengan algoritma LightGBM.
 
 * **LightGBM (Light Gradient Boosting Machine):**
-  Algoritma ini dipilih karena kecepatannya dalam melatih data besar dan kemampuannya menangani fitur yang kompleks secara efisien [4]. LightGBM menggunakan teknik *Leaf-wise tree growth* yang cenderung menghasilkan *loss* lebih rendah dibandingkan algoritma *level-wise* lainnya.
+  Algoritma ini dipilih karena kecepatannya dalam melatih data besar dan kemampuannya menangani fitur yang kompleks secara efisien [^4]. LightGBM menggunakan teknik *Leaf-wise tree growth* yang cenderung menghasilkan *loss* lebih rendah dibandingkan algoritma *level-wise* lainnya.
 
 * **Hyperparameter Tuning dengan Optuna:**
-  Untuk mendapatkan hasil terbaik, proyek ini menggunakan Optuna sebagai *framework* optimasi otomatis. Optuna bekerja dengan mencoba berbagai kombinasi parameter (seperti `learning_rate`, `num_leaves`, dan `feature_fraction`) untuk meminimalkan nilai *error* pada data validasi [5].
+  Untuk mendapatkan hasil terbaik, proyek ini menggunakan Optuna sebagai *framework* optimasi otomatis. Optuna bekerja dengan mencoba berbagai kombinasi parameter (seperti `learning_rate`, `num_leaves`, dan `feature_fraction`) untuk meminimalkan nilai *error* pada data validasi [^5].
 
 * **Metrik Evaluasi:**
   Model dievaluasi menggunakan Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), dan R2 Score untuk mengukur seberapa jauh selisih antara harga prediksi dengan harga aktual di pasar.
@@ -328,9 +328,9 @@ Langkah ini penting untuk memastikan sistem tetap relevan dengan kondisi pasar y
 Kesimpulannya, proyek **Market Data Intelligence System (MDIS)** telah berhasil mengintegrasikan *pipeline* data *end-to-end* yang mengotomatisasi pengumpulan variabel teknikal dan fundamental dari Yahoo Finance ke dalam database Supabase, sehingga menghilangkan hambatan analisis manual bagi pengurus GIBEI Telkom University. Melalui implementasi algoritma LightGBM yang dioptimasi dengan Optuna, sistem ini mampu menghasilkan prediksi harga saham (seperti nilai `7592.56`) yang akurat dan objektif terhadap dinamika pasar LQ45. Dengan model yang telah ter-*deploy* di Hugging Face, hasil riset kini dapat didistribusikan secara *real-time* melalui API ke *dashboard FrontEnd*, menjadikan sistem ini sebagai alat bantu keputusan (*decision support system*) yang cerdas, saintifik, dan efisien bagi seluruh komunitas investasi di lingkungan kampus.
 
 ### Referensi
-* **[1]** Borges, A., & Neves, R. (2020). *A Combined Approach of Fundamental and Technical Analysis for Stock Market Forecasting*. Proceedings of the 12th International Joint Conference on Knowledge Discovery, Knowledge Engineering and Management.
-* **[2]** Ke, G., Meng, Q., Finley, T., et al. (2017). *LightGBM: A Highly Efficient Gradient Boosting Decision Tree*. Advances in Neural Information Processing Systems (NIPS).
-* **[3]** Nti, I. K., Adekoya, A. F., & Weyori, B. A. (2020). *A systematic review of state-of-the-art techniques for stock market prediction*. Royal Society Open Science.
-* **[4]** Ke, G., Meng, Q., Finley, T., et al. (2017). *LightGBM: A Highly Efficient Gradient Boosting Decision Tree*. Advances in Neural Information Processing Systems (NIPS).
-* **[5]** Akiba, T., Sano, S., Yanase, T., et al. (2019). *Optuna: A Next-generation Hyperparameter Optimization Framework*. Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining.
 
+[^1]: Borges, A., & Neves, R. (2020). A Combined Approach of Fundamental and Technical Analysis for Stock Market Forecasting. Proceedings of the 12th International Joint Conference on Knowledge Discovery, Knowledge Engineering and Management.
+[^2]: Ke, G., Meng, Q., Finley, T., et al. (2017). LightGBM: A Highly Efficient Gradient Boosting Decision Tree. Advances in Neural Information Processing Systems (NIPS).
+[^3]: Nti, I. K., Adekoya, A. F., & Weyori, B. A. (2020). A systematic review of state-of-the-art techniques for stock market prediction. Royal Society Open Science.
+[^4]: Ke, G., Meng, Q., Finley, T., et al. (2017). LightGBM: A Highly Efficient Gradient Boosting Decision Tree. Advances in Neural Information Processing Systems (NIPS).
+[^5]: Akiba, T., Sano, S., Yanase, T., et al. (2019). Optuna: A Next-generation Hyperparameter Optimization Framework. Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining.
